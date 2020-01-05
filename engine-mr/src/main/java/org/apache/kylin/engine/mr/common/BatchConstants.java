@@ -77,6 +77,8 @@ public interface BatchConstants {
 
     String CFG_SHARD_NUM = "shard.num";
 
+    String CFG_CONVERGE_CUBOID_PARTITION_PARAM = "converge.cuboid.partition.param";
+
     /**
      * command line ARGuments
      */
@@ -106,7 +108,10 @@ public interface BatchConstants {
     String ARG_META_URL = "metadataUrl";
     String ARG_HBASE_CONF_PATH = "hbaseConfPath";
     String ARG_SHRUNKEN_DICT_PATH = "shrunkenDictPath";
-    String ARG_COUNTER_OUPUT = "counterOutput";
+    String ARG_COUNTER_OUTPUT = "counterOutput";
+    String ARG_BASE64_ENCODED_STEP_NAME = "base64StepName";
+    String ARG_SQL_COUNT = "sqlCount";
+    String ARG_BASE64_ENCODED_SQL = "base64EncodedSql";
 
     /**
      * logger and counter

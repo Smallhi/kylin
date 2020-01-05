@@ -19,6 +19,7 @@
 package org.apache.kylin.cube;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -116,6 +118,9 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<Integer, Long> sourcePartitionOffsetEnd = Maps.newHashMap();
 
+    @JsonProperty("stream_source_checkpoint")
+    private String streamSourceCheckpoint;
+
     @JsonProperty("additionalInfo")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
@@ -154,6 +159,26 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         return dateFormat.format(tsRange.start.v) + "_" + dateFormat.format(tsRange.end.v);
+    }
+
+    public static Pair<Long, Long> parseSegmentName(String segmentName) {
+        if ("FULL".equals(segmentName)) {
+            return new Pair<>(0L, 0L);
+        }
+        String[] startEnd = segmentName.split("_");
+        if (startEnd.length != 2) {
+            throw new IllegalArgumentException("the segmentName is illegal: " + segmentName);
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        try {
+            long dateRangeStart = dateFormat.parse(startEnd[0]).getTime();
+            long dateRangeEnd = dateFormat.parse(startEnd[1]).getTime();
+            return new Pair<>(dateRangeStart, dateRangeEnd);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid segmentName for CubeSegment, segmentName = " + segmentName);
+        }
     }
 
     // ============================================================================
@@ -319,6 +344,14 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         for (TblColRef col : getCubeDesc().getAllColumnsHaveDictionary()) {
             result.put(col, (Dictionary<String>) getDictionary(col));
+        }
+        return result;
+    }
+
+    public Map<TblColRef, Dictionary<String>> buildGlobalDictionaryMap(int globalColumnsSize) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMapWithExpectedSize(globalColumnsSize);
+        for (TblColRef col : getCubeDesc().getAllGlobalDictColumns()) {
+            result.put(col, getDictionary(col));
         }
         return result;
     }
@@ -593,5 +626,13 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setDimensionRangeInfoMap(Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
         this.dimensionRangeInfoMap = dimensionRangeInfoMap;
+    }
+
+    public String getStreamSourceCheckpoint() {
+        return streamSourceCheckpoint;
+    }
+
+    public void setStreamSourceCheckpoint(String streamSourceCheckpoint) {
+        this.streamSourceCheckpoint = streamSourceCheckpoint;
     }
 }

@@ -80,7 +80,9 @@ public class SQLDigest {
     public List<TblColRef> sortColumns;
     public List<OrderEnum> sortOrders;
     public boolean isRawQuery;
+    public boolean isBorrowedContext;
     public boolean limitPrecedesAggr;
+    public boolean hasLimit;
 
     public Set<MeasureDesc> involvedMeasure;
 
@@ -91,7 +93,7 @@ public class SQLDigest {
             List<DynamicFunctionDesc> dynAggregations, //
             Set<TblColRef> rtDimensionColumns, Set<TblColRef> rtMetricColumns, // dynamic col related columns
             Set<TblColRef> filterColumns, TupleFilter filter, TupleFilter havingFilter, // filter
-            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr, // sort & limit
+            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr, boolean hasLimit, boolean isBorrowedContext, // sort & limit
             Set<MeasureDesc> involvedMeasure
     ) {
         this.factTable = factTable;
@@ -120,7 +122,9 @@ public class SQLDigest {
         this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();
+        this.isBorrowedContext = isBorrowedContext;
         this.limitPrecedesAggr = limitPrecedesAggr;
+        this.hasLimit = hasLimit;
 
         this.involvedMeasure = involvedMeasure;
 

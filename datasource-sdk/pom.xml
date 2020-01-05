@@ -51,7 +51,7 @@
         <!--<dependency>-->
         <!--<groupId>com.microsoft.sqlserver</groupId>-->
         <!--<artifactId>mssql-jdbc</artifactId>-->
-        <!--<version>6.2.2.jre8</version>-->
+        <!--<version>${mssql-jdbc.version}</version>-->
         <!--<scope>provided</scope>-->
         <!--</dependency>-->
 
@@ -77,6 +77,12 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.1.1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -3,8 +3,7 @@
     "url": "/jobs",
     "params": {
       "templateUrl": "partials/jobs/jobs.html",
-      "tab": "jobs",
-      "controller": "JobCtrl"
+      "tab": "jobs"
     }
   },
   {
@@ -133,6 +132,22 @@
     "params": {
       "templateUrl": "partials/cubes/hybrid_edit.html",
       "tab": "models"
+    }
+  },
+  {
+    "url": "/streaming/receiver/:receiverId",
+    "params": {
+      "templateUrl": "partials/admin/streamingReceiver.html",
+      "tab": "admin",
+      "controller": "StreamingReceiverCtrl"
+    }
+  },
+  {
+    "url": "/user/profile",
+    "params": {
+      "templateUrl": "partials/user/profile.html",
+      "tab": "user",
+      "controller": "UserProfileCtrl"
     }
   }
 ]

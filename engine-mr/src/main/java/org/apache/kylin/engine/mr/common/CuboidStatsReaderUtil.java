@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +46,7 @@ public class CuboidStatsReaderUtil {
         } catch (IOException e) {
             logger.warn("Fail to read statistics for cube " + cubeInstance.getName() + " due to " + e);
         }
-        return statisticsMerged.isEmpty() ? null : statisticsMerged;
+        return statisticsMerged == null ? Collections.emptyMap() : statisticsMerged;
     }
 
     public static Pair<Map<Long, Long>, Map<Long, Double>> readCuboidStatsAndSizeFromCube(Set<Long> cuboidIds,
@@ -135,6 +136,12 @@ public class CuboidStatsReaderUtil {
 
     public static Map<Long, Long> readCuboidStatsFromSegment(Set<Long> cuboidIds, CubeSegment cubeSegment)
             throws IOException {
+        Pair<Map<Long, Long>, Long> stats = readCuboidStatsWithSourceFromSegment(cuboidIds, cubeSegment);
+        return stats == null ? null : stats.getFirst();
+    }
+
+    public static Pair<Map<Long, Long>, Long> readCuboidStatsWithSourceFromSegment(Set<Long> cuboidIds,
+            CubeSegment cubeSegment) throws IOException {
         if (cubeSegment == null) {
             logger.warn("The cube segment can not be " + null);
             return null;
@@ -157,7 +164,6 @@ public class CuboidStatsReaderUtil {
                 cuboidsWithStats.put(cuboid, rowEstimate);
             }
         }
-        return cuboidsWithStats;
+        return new Pair<>(cuboidsWithStats, cubeStatsReader.sourceRowCount);
     }
-
 }

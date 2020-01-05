@@ -53,6 +53,7 @@ public class AdminServiceTest extends ServiceTestBase {
             String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
                     "kylin.web.dashboard-enabled=\n" +
                     "kylin.web.contact-mail=\n" +
+                    "kylin.job.scheduler.default=0\n" +
                     "kylin.query.cache-enabled=true\n" +
                     "kylin.web.link-diagnostic=\n" +
                     "kylin.web.help.length=4\n" +
@@ -66,11 +67,13 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.web.link-hadoop=\n" +
                     "kylin.web.hide-measures=RAW\n" +
                     "kylin.htrace.show-gui-trace-toggle=false\n" +
+                    "kylin.security.additional-profiles=\n" +
                     "kylin.web.export-allow-admin=true\n" +
                     "kylin.env=QA\n" +
                     "kylin.web.hive-limit=20\n" +
                     "kylin.engine.default=2\n" +
                     "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs/howto/howto_optimize_cubes.html\n" +
+                    "kylin.web.default-time-filter=1\n" +
                     "kylin.web.help.2=tableau|Tableau Guide|http://kylin.apache.org/docs/tutorial/tableau_91.html\n" +
                     "kylin.web.help.1=odbc|ODBC Driver|http://kylin.apache.org/docs/tutorial/odbc.html\n" +
                     "kylin.web.help.0=start|Getting Started|http://kylin.apache.org/docs/tutorial/kylin_sample.html\n" +

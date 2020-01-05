@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -81,7 +82,7 @@ public class TableController extends BasicController {
             return tableService.getTableDescByProject(project, withExt);
         } catch (IOException e) {
             logger.error("Failed to get Hive Tables", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -127,7 +128,7 @@ public class TableController extends BasicController {
             }
         } catch (Throwable e) {
             logger.error("Failed to load Hive Table", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         return result;
     }
@@ -149,7 +150,7 @@ public class TableController extends BasicController {
             }
         } catch (Throwable e) {
             logger.error("Failed to unload Hive Table", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
         result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
@@ -176,7 +177,7 @@ public class TableController extends BasicController {
             }
         } catch (IOException e) {
             logger.error("Failed to calculate cardinality", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         return request;
     }
@@ -195,7 +196,7 @@ public class TableController extends BasicController {
             return tableService.getSourceDbNames(project);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -213,7 +214,7 @@ public class TableController extends BasicController {
             return tableService.getSourceTableNames(project, database);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -242,6 +243,12 @@ public class TableController extends BasicController {
     public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
         return tableService.getLookupTableSnapshots(project, tableName);
+    }
+
+    @RequestMapping(value = "/supported_datetime_patterns", method = { RequestMethod.GET })
+    @ResponseBody
+    public String[] getSupportedDatetimePatterns() {
+        return DateFormat.SUPPORTED_DATETIME_PATTERN;
     }
 
     public void setTableService(TableService tableService) {

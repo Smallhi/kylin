@@ -48,10 +48,14 @@ public class StatisticsDecisionUtil {
         KylinConfig kylinConf = seg.getConfig();
         String algPref = kylinConf.getCubeAlgorithm();
         CubingJob.AlgorithmEnum alg;
-        if (mapperOverlapRatio == 0) { // no source records
+        if (mapperOverlapRatio == 0 && kylinConf.isAutoInmemToOptimize()) { // no source records
             alg = CubingJob.AlgorithmEnum.INMEM;
         } else if (CubingJob.AlgorithmEnum.INMEM.name().equalsIgnoreCase(algPref)) {
             alg = CubingJob.AlgorithmEnum.INMEM;
+            if (seg.getCubeDesc().isStreamingCube() && CubingJob.CubingJobTypeEnum
+                    .getByName(cubingJob.getJobType()) == CubingJob.CubingJobTypeEnum.BUILD) {
+                alg = CubingJob.AlgorithmEnum.LAYER;
+            }
         } else if (CubingJob.AlgorithmEnum.LAYER.name().equalsIgnoreCase(algPref)) {
             alg = CubingJob.AlgorithmEnum.LAYER;
         } else {

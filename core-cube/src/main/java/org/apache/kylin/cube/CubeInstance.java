@@ -185,10 +185,18 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return segments.getMergingSegments(mergedSegment);
     }
 
+    public CubeSegment getOriginalSegmentToRefresh(CubeSegment refreshedSegment) {
+        return getOriginalSegment(refreshedSegment);
+    }
+
     public CubeSegment getOriginalSegmentToOptimize(CubeSegment optimizedSegment) {
+        return getOriginalSegment(optimizedSegment);
+    }
+
+    private CubeSegment getOriginalSegment(CubeSegment toSegment) {
         for (CubeSegment segment : this.getSegments(SegmentStatusEnum.READY)) {
-            if (!optimizedSegment.equals(segment) //
-                    && optimizedSegment.getSegRange().equals(segment.getSegRange())) {
+            if (!toSegment.equals(segment) //
+                    && toSegment.getSegRange().equals(segment.getSegRange())) {
                 return segment;
             }
         }
@@ -534,7 +542,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         if (result.capable) {
             result.cost = getCost(digest);
             for (CapabilityInfluence i : result.influences) {
-                result.cost *= (i.suggestCostMultiplier() == 0) ? 1.0 : i.suggestCostMultiplier();
+                double suggestCost = i.suggestCostMultiplier();
+                result.cost *= (suggestCost == 0) ? 1.0 : suggestCost;
             }
         } else {
             result.cost = -1;
@@ -603,7 +612,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             return false;
 
         return this.getConfig().isAutoMergeEnabled() && this.getDescriptor().getAutoMergeTimeRanges() != null
-                && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
+                && this.getDescriptor().getAutoMergeTimeRanges().length > 0 && this.getStatus() == RealizationStatusEnum.READY;
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {

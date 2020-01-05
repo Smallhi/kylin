@@ -21,6 +21,7 @@ package org.apache.kylin.job.execution;
 import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
+import static org.apache.kylin.job.constant.ExecutableConstants.FLINK_JOB_ID;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -77,6 +78,7 @@ public class ExecutableManager {
         result.setUuid(executable.getId());
         result.setType(executable.getClass().getName());
         result.setParams(executable.getParams());
+        result.setPriority(executable.getPriority());
         if (executable instanceof ChainedExecutable) {
             List<ExecutablePO> tasks = Lists.newArrayList();
             for (AbstractExecutable task : ((ChainedExecutable) executable).getTasks()) {
@@ -347,7 +349,7 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (task.getStatus() == ExecutableState.ERROR || task.getStatus() == ExecutableState.STOPPED) {
-                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
+                    updateJobOutput(task.getId(), ExecutableState.READY, null, "no output");
                     break;
                 }
             }
@@ -374,7 +376,8 @@ public class ExecutableManager {
             } else {
                 logger.warn("The job " + jobId + " has been discarded.");
             }
-            return;
+            throw new IllegalStateException(
+                "The job " + job.getId() + " has already been finished and cannot be discarded.");
         }
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
@@ -414,6 +417,22 @@ public class ExecutableManager {
             return;
         }
 
+        if (!(job.getStatus() == ExecutableState.READY
+            || job.getStatus() == ExecutableState.RUNNING)) {
+            logger.warn("The status of job " + jobId + " is " + job.getStatus().toString()
+                + ". It's final state and cannot be transfer to be stopped!!!");
+            throw new IllegalStateException(
+                "The job " + job.getId() + " has already been finished and cannot be stopped.");
+        }
+        if (job instanceof DefaultChainedExecutable) {
+            List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
+            for (AbstractExecutable task : tasks) {
+                if (!task.getStatus().isFinalState()) {
+                    updateJobOutput(task.getId(), ExecutableState.STOPPED, null, null);
+                    break;
+                }
+            }
+        }
         updateJobOutput(jobId, ExecutableState.STOPPED, null, null);
     }
 
@@ -444,9 +463,12 @@ public class ExecutableManager {
                 jobOutput.setStatus(newStatus.toString());
             }
             if (info != null) {
-                jobOutput.getInfo().putAll(info);
+                jobOutput.setInfo(info);
             }
             if (output != null) {
+                if (output.length() > config.getJobOutputMaxSize()) {
+                    output = output.substring(0, config.getJobOutputMaxSize());
+                }
                 jobOutput.setContent(output);
             }
             executableDao.updateJobOutput(jobOutput);
@@ -531,10 +553,11 @@ public class ExecutableManager {
             }
         }
 
-        if (info.containsKey(YARN_APP_ID) && !StringUtils.isEmpty(config.getJobTrackingURLPattern())) {
+        if ((info.containsKey(YARN_APP_ID) || info.containsKey(FLINK_JOB_ID)) && !StringUtils.isEmpty(config.getJobTrackingURLPattern())) {
             String pattern = config.getJobTrackingURLPattern();
+            String jobId = info.containsKey(YARN_APP_ID) ? info.get(YARN_APP_ID) : info.get(FLINK_JOB_ID);
             try {
-                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
+                String newTrackingURL = String.format(Locale.ROOT, pattern, jobId);
                 info.put(YARN_APP_URL, newTrackingURL);
             } catch (IllegalFormatException ife) {
                 logger.error("Illegal tracking url pattern: " + config.getJobTrackingURLPattern());
@@ -569,6 +592,7 @@ public class ExecutableManager {
         result.setId(executablePO.getUuid());
         result.setName(executablePO.getName());
         result.setParams(executablePO.getParams());
+        result.setPriority(executablePO.getPriority());
 
         if (!(result instanceof BrokenExecutable)) {
             List<ExecutablePO> tasks = executablePO.getTasks();

@@ -36,6 +36,7 @@ public class JobEngineConfig {
     public static final String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
     public static final String DEFAULT_JOB_CONF_SUFFIX = "";
     public static final String IN_MEM_JOB_CONF_SUFFIX = "inmem";
+    public static final String CUBE_MERGE_JOB_CONF_SUFFIX = "cube_merge";
 
     private static File getJobConfig(String fileName) {
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
@@ -72,7 +73,7 @@ public class JobEngineConfig {
 
     /**
      *
-     * @param jobType job config file suffix name; if be null, will use the default job conf
+     * @param jobType job config file suffix name; if is null, will use the default job conf
      * @return the job config file path
      * @throws IOException
      */

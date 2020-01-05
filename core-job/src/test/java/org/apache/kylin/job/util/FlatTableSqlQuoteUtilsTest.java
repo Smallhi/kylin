@@ -18,34 +18,43 @@
 
 package org.apache.kylin.job.util;
 
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.kylin.common.SourceDialect;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
-public class FlatTableSqlQuoteUtilsTest {
+public class FlatTableSqlQuoteUtilsTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setup() throws Exception {
+        createTestMetadata();
+    }
 
     @Test
     public void testQuoteTableName() {
         List<String> tablePatterns = FlatTableSqlQuoteUtils.getTableNameOrAliasPatterns("KYLIN_SALES");
         String expr = "KYLIN_SALES.PRICE * KYLIN_SALES.COUNT";
         String expectedExpr = "`KYLIN_SALES`.PRICE * `KYLIN_SALES`.COUNT";
-        String quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES", tablePatterns);
+        String quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "`KYLIN_SALES`.PRICE * KYLIN_SALES.COUNT";
         expectedExpr = "`KYLIN_SALES`.PRICE * `KYLIN_SALES`.COUNT";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES", tablePatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE * KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT";
         expectedExpr = "`KYLIN_SALES`.PRICE AS KYLIN_SALES_PRICE * `KYLIN_SALES`.COUNT AS KYLIN_SALES_COUNT";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES", tablePatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "(KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE > 1 and KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT > 50)";
         expectedExpr = "(`KYLIN_SALES`.PRICE AS KYLIN_SALES_PRICE > 1 and `KYLIN_SALES`.COUNT AS KYLIN_SALES_COUNT > 50)";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES", tablePatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
     }
 
@@ -54,22 +63,22 @@ public class FlatTableSqlQuoteUtilsTest {
         List<String> tablePatterns = FlatTableSqlQuoteUtils.getTableNameOrAliasPatterns("KYLIN_SALES_ALIAS");
         String expr = "KYLIN_SALES.PRICE * KYLIN_SALES.COUNT";
         String expectedExpr = "KYLIN_SALES.PRICE * KYLIN_SALES.COUNT";
-        String quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES_ALIAS", tablePatterns);
+        String quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES_ALIAS", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE * KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT";
         expectedExpr = "KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE * KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES_ALIAS", tablePatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES_ALIAS", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "(KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE > 1 and KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT > 50)";
         expectedExpr = "(KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE > 1 and KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT > 50)";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES_ALIAS", tablePatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES_ALIAS", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "(KYLIN_SALES_ALIAS.PRICE AS KYLIN_SALES_PRICE > 1 and KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT > 50)";
         expectedExpr = "(`KYLIN_SALES_ALIAS`.PRICE AS KYLIN_SALES_PRICE > 1 and KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT > 50)";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "KYLIN_SALES_ALIAS", tablePatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "KYLIN_SALES_ALIAS", tablePatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
     }
 
@@ -78,27 +87,27 @@ public class FlatTableSqlQuoteUtilsTest {
         List<String> columnPatterns = FlatTableSqlQuoteUtils.getColumnNameOrAliasPatterns("PRICE");
         String expr = "KYLIN_SALES.PRICE * KYLIN_SALES.COUNT";
         String expectedExpr = "KYLIN_SALES.`PRICE` * KYLIN_SALES.COUNT";
-        String quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "PRICE", columnPatterns);
+        String quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "PRICE", columnPatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "KYLIN_SALES.PRICE/KYLIN_SALES.COUNT";
         expectedExpr = "KYLIN_SALES.`PRICE`/KYLIN_SALES.COUNT";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "PRICE", columnPatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "PRICE", columnPatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "KYLIN_SALES.PRICE AS KYLIN_SALES_PRICE * KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT";
         expectedExpr = "KYLIN_SALES.`PRICE` AS KYLIN_SALES_PRICE * KYLIN_SALES.COUNT AS KYLIN_SALES_COUNT";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "PRICE", columnPatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "PRICE", columnPatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "(PRICE > 1 AND COUNT > 50)";
         expectedExpr = "(`PRICE` > 1 AND COUNT > 50)";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "PRICE", columnPatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "PRICE", columnPatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
 
         expr = "PRICE>1 and `PRICE` < 15";
         expectedExpr = "`PRICE`>1 and `PRICE` < 15";
-        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "`", "PRICE", columnPatterns);
+        quotedExpr = FlatTableSqlQuoteUtils.quoteIdentifier(expr, "PRICE", columnPatterns);
         Assert.assertEquals(expectedExpr, quotedExpr);
     }
 
@@ -132,6 +141,16 @@ public class FlatTableSqlQuoteUtilsTest {
 
     @Test
     public void testQuoteWithIdentifier() {
-        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc"));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc", null));
+        Assert.assertEquals("abc", FlatTableSqlQuoteUtils.quoteIdentifier("abc", FlatTableSqlQuoteUtils.NON_QUOTE_DIALECT));
+        Assert.assertEquals("\"abc\"", FlatTableSqlQuoteUtils.quoteIdentifier("abc", SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc", FlatTableSqlQuoteUtils.HIVE_DIALECT));
+        Assert.assertEquals("[abc]", FlatTableSqlQuoteUtils.quoteIdentifier("abc", SqlDialect.DatabaseProduct.MSSQL.getDialect()));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc", SqlDialect.DatabaseProduct.MYSQL.getDialect()));
+
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.MYSQL, "abc"));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.HIVE, "abc"));
+        Assert.assertEquals("[abc]", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.MSSQL, "abc"));
+        Assert.assertEquals("\"abc\"", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.POSTGRESQL, "abc"));
     }
 }

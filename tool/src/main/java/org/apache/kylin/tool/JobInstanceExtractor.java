@@ -130,6 +130,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         Output output = outputs.get(cubeJob.getId());
         final JobInstance result = new JobInstance();
         result.setName(cubeJob.getName());
+        result.setProjectName(cubeJob.getProjectName());
         if (cube != null) {
             result.setRelatedCube(cube.getName());
             result.setDisplayCubeName(cube.getDisplayName());
@@ -139,6 +140,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
             result.setDisplayCubeName(cubeName);
         }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());

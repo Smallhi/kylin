@@ -79,9 +79,11 @@ public class JobInfoConverter {
 
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
+        result.setProjectName(cubeJob.getProjectName());
         result.setRelatedCube(cube != null ? cube.getName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         result.setDisplayCubeName(cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
@@ -115,6 +117,7 @@ public class JobInfoConverter {
 
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
+        result.setProjectName(job.getProjectName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setDisplayCubeName(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setLastModified(output.getLastModified());
@@ -235,6 +238,7 @@ public class JobInfoConverter {
         result.setId(job.getId());
         result.setJobName(job.getName());
         result.setLastModified(output.getLastModified());
+        result.setJobStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         return result;
     }
 }

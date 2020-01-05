@@ -25,12 +25,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
@@ -65,9 +67,9 @@ public class OLAPContext {
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
     public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
 
-    static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
+    static final InternalThreadLocal<Map<String, String>> _localPrarameters = new InternalThreadLocal<Map<String, String>>();
 
-    static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
+    static final InternalThreadLocal<Map<Integer, OLAPContext>> _localContexts = new InternalThreadLocal<Map<Integer, OLAPContext>>();
 
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);
@@ -132,6 +134,7 @@ public class OLAPContext {
     public boolean limitPrecedesAggr = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
+    public boolean hasLimit = false;
     public boolean hasWindow = false;
     public boolean groupByExpression = false; // checkout if group by column has operator
     public boolean afterOuterAggregate = false;
@@ -154,6 +157,7 @@ public class OLAPContext {
     public TupleFilter havingFilter;
     public List<JoinDesc> joins = new LinkedList<>();
     public JoinsTree joinsTree;
+    public boolean isBorrowedContext = false; // Whether preparedContext is borrowed from cache
     List<TblColRef> sortColumns;
     List<SQLDigest.OrderEnum> sortOrders;
 
@@ -197,7 +201,7 @@ public class OLAPContext {
                     metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
                     rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter
-                    sortColumns, sortOrders, limitPrecedesAggr, // sort & limit
+                    sortColumns, sortOrders, limitPrecedesAggr, hasLimit, isBorrowedContext, // sort & limit
                     involvedMeasure);
         }
         return sqlDigest;
@@ -315,14 +319,26 @@ public class OLAPContext {
                 Object value = dataContext.get(variable);
                 if (value != null) {
                     String str = value.toString();
-                    if (compFilter.getColumn().getType().isDateTimeFamily())
-                        str = String.valueOf(DateFormat.stringToMillis(str));
+                    str = transferDateTimeColumnToMillis(compFilter, str);
                     compFilter.clearPreviousVariableValues(variable);
                     compFilter.bindVariable(variable, str);
                 }
 
             }
         }
+    }
+
+    private String transferDateTimeColumnToMillis(CompareTupleFilter compFilter, String value) {
+        TblColRef column = compFilter.getColumn();
+        // To fix KYLIN-4157, when using PrepareStatement query, functions within WHERE will cause InternalErrorException
+        if (Objects.isNull(column)){
+            return value;
+        }
+
+        if (column.getType().isDateTimeFamily()){
+            value = String.valueOf(DateFormat.stringToMillis(value));
+        }
+        return value;
     }
     // ============================================================================
 
